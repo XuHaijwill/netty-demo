@@ -1,8 +1,29 @@
+/*.iml
+/*.ipr
+/*.iws
+/.classpath
+/.factorypath
+/.idea
+/.project
+/.settings
+/nb*
+/release.properties
+/target
+
+# These are needed if running in IDE without properties set
+/ibderby
+derby.log
+/bin/
+.mvn/wrapper/maven-wrapper.jar
+.sts4-cache/
+
 # Compiled class file
 *.class
 
 # Log file
 *.log
+
+*.iml
 
 # BlueJ files
 *.ctxt
