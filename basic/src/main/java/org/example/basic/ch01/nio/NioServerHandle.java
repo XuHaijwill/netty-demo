@@ -1,6 +1,7 @@
 package org.example.basic.ch01.nio;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
@@ -8,6 +9,8 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 import java.util.Set;
+
+import static org.example.basic.ch01.Ch01Const.response;
 
 /**
  *
@@ -23,6 +26,18 @@ public class NioServerHandle implements Runnable{
      */
     public NioServerHandle(int port) {
 
+        try {
+            selector = Selector.open();
+            serverChannel = ServerSocketChannel.open();
+            serverChannel.configureBlocking(false);
+            serverChannel.socket().bind(new InetSocketAddress(port));
+            serverChannel.register(selector,SelectionKey.OP_ACCEPT);
+            started = true;
+            System.out.println("服务器已启动，端口号："+port);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
     public void stop(){
         started = false;
@@ -32,10 +47,8 @@ public class NioServerHandle implements Runnable{
         //循环遍历selector
         while(started){
             try{
-                //无论是否有读写事件发生，selector每隔1s被唤醒一次
-                selector.select(1000);
                 //阻塞,只有当至少一个注册的事件发生的时候才会继续.
-//				selector.select();
+                selector.select();
                 Set<SelectionKey> keys = selector.selectedKeys();
                 Iterator<SelectionKey> it = keys.iterator();
                 SelectionKey key = null;
@@ -69,8 +82,16 @@ public class NioServerHandle implements Runnable{
         if(key.isValid()){
             //处理新接入的请求消息
             if(key.isAcceptable()){
-                //TODO
-
+                //获得关心当前事件的channel
+                ServerSocketChannel ssc = (ServerSocketChannel)key.channel();
+                //通过ServerSocketChannel的accept创建SocketChannel实例
+                //完成该操作意味着完成TCP三次握手，TCP物理链路正式建立
+                SocketChannel sc = ssc.accept();
+                System.out.println("======socket channel 建立连接" );
+                //设置为非阻塞的
+                sc.configureBlocking(false);
+                //连接已经完成了，可以开始关心读事件了
+                sc.register(selector,SelectionKey.OP_READ);
             }
             //读消息
             if(key.isReadable()){
@@ -93,19 +114,10 @@ public class NioServerHandle implements Runnable{
                     String message = new String(bytes,"UTF-8");
                     System.out.println("服务器收到消息：" + message);
                     //处理数据
-                    String result = null;
-                    try{
-                        result = result = "Hello,"+message+",Now is "
-                                +new java.util.Date(
-                                System.currentTimeMillis()).toString() ;
-                    }catch(Exception e){
-                        result = "计算错误：" + e.getMessage();
-                    }
-                    /*发送应答消息*/
+                    String result = response(message) ;
+                    //发送应答消息
                     doWrite(sc,result);
                 }
-                //没有读取到字节 忽略
-//				else if(readBytes==0);
                 //链路已经关闭，释放资源
                 else if(readBytes<0){
                     key.cancel();
