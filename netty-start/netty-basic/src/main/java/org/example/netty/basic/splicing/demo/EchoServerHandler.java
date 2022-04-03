@@ -1,13 +1,14 @@
-package org.example.netty.basic.echo;
+package org.example.netty.basic.splicing.demo;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.util.CharsetUtil;
+
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 类说明：自己的业务处理
@@ -16,21 +17,19 @@ import io.netty.util.CharsetUtil;
 @ChannelHandler.Sharable
 public class EchoServerHandler extends ChannelInboundHandlerAdapter {
 
+    private AtomicInteger counter = new AtomicInteger(0);
+
     /*** 服务端读取到网络数据后的处理*/
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg)
             throws Exception {
         ByteBuf in = (ByteBuf)msg;/*netty实现的缓冲区*/
-        System.out.println("Server Accept:"+in.toString(CharsetUtil.UTF_8));
-        ctx.write(in);
-        ByteBufAllocator alloc = ctx.alloc();
-        alloc.buffer();
-        ctx.channel().alloc();
-        ByteBuf buffer = Unpooled.buffer();
-        Unpooled.directBuffer();
-        //ReferenceCountUtil.release(msg);
-//        ctx.channel().writeAndFlush(in);
-//        ctx.pipeline().writeAndFlush(in);
+        String request = in.toString(CharsetUtil.UTF_8);
+        System.out.println("Server Accept:"+request
+                +" the counter is "+counter.incrementAndGet());
+        String resp = "Hello,"+request+",welcome"
+                +System.getProperty("line.separator");
+        ctx.write(Unpooled.copiedBuffer(resp,CharsetUtil.UTF_8));
     }
 
     /*** 服务端读取完成网络数据后的处理*/

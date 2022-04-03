@@ -1,4 +1,4 @@
-package org.example.netty.basic.echo;
+package org.example.netty.basic.splicing.demo;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -6,7 +6,11 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.util.CharsetUtil;
 
+/**
+ * 类说明：
+ */
 public class EchoClientHandler extends SimpleChannelInboundHandler<ByteBuf> {
+
     /*客户端读取到数据后干什么*/
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, ByteBuf msg)
@@ -18,9 +22,22 @@ public class EchoClientHandler extends SimpleChannelInboundHandler<ByteBuf> {
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         //往服务器写数据
-        //ctx.writeAndFlush("String");
-        ctx.writeAndFlush(Unpooled.copiedBuffer("Hello,Netty",
-                CharsetUtil.UTF_8));
+//        //ctx.writeAndFlush("String");
+//        ctx.writeAndFlush(Unpooled.copiedBuffer("Hello,Netty",
+//                CharsetUtil.UTF_8));
+        ByteBuf msg = null;
+        String request = "Mark,Lison,Peter,James,Deer"
+                +System.getProperty("line.separator");
+        for(int i=0;i<100;i++){
+            msg = Unpooled.buffer(request.length());
+            msg.writeBytes(request.getBytes());
+            ctx.writeAndFlush(msg);
+        }
+    }
+
+    @Override
+    public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
+        System.out.println("channelReadComplete");
     }
 
     @Override
@@ -29,4 +46,5 @@ public class EchoClientHandler extends SimpleChannelInboundHandler<ByteBuf> {
         cause.printStackTrace();
         ctx.close();
     }
+
 }
