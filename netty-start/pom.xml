@@ -13,6 +13,7 @@
         <module>netty-basic</module>
         <module>netty-mvc-coment</module>
         <module>websocket</module>
+        <module>netty-websocket</module>
     </modules>
 
     <dependencies>
